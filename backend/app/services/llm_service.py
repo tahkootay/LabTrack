@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from app.core.config import settings
 from app.services.file_service import FileService
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ExtractedAnalyte(BaseModel):
@@ -121,7 +124,7 @@ class LLMExtractionService:
                 return await self._extract_from_text(file_content.decode('utf-8'))
                 
         except Exception as e:
-            print(f"Ошибка при извлечении данных из файла {file_path}: {str(e)}")
+            logger.error(f"Error extracting data from file {file_path}: {str(e)}", exc_info=True)
             return None
     
     async def _extract_from_image(self, file_content: bytes, mime_type: str) -> Optional[ExtractedDocument]:

@@ -6,6 +6,9 @@ import magic
 import boto3
 from botocore.exceptions import ClientError
 from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FileService:
@@ -66,19 +69,22 @@ class FileService:
                 Params={'Bucket': settings.s3_bucket, 'Key': file_path},
                 ExpiresIn=expires_in
             )
-        except ClientError:
+        except ClientError as e:
+            logger.error(f"Error generating presigned URL for {file_path}: {str(e)}")
             return None
     
     async def get_file_content(self, file_path: str) -> Optional[bytes]:
         try:
             response = self.s3_client.get_object(Bucket=settings.s3_bucket, Key=file_path)
             return response['Body'].read()
-        except ClientError:
+        except ClientError as e:
+            logger.error(f"Error getting file content for {file_path}: {str(e)}")
             return None
     
     def delete_file(self, file_path: str) -> bool:
         try:
             self.s3_client.delete_object(Bucket=settings.s3_bucket, Key=file_path)
             return True
-        except ClientError:
+        except ClientError as e:
+            logger.error(f"Error deleting file {file_path}: {str(e)}")
             return False

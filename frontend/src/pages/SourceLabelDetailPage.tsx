@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { ArrowLeft, Activity, AlertTriangle, TrendingUp, TrendingDown, CheckCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { resultsApi, analytesApi } from '../services/api';
+import { resultsApi } from '../services/api';
 import ErrorMessage from '../components/ErrorMessage';
 
 const Container = styled.div`
@@ -151,6 +151,18 @@ const LoadingState = styled.div`
   color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
+const InfoAlert = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.md};
+  background: #e0f2fe;
+  border: 1px solid #0288d1;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  color: #01579b;
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
 interface ChartDataPoint {
   date: string;
   value: number | null;
@@ -162,34 +174,26 @@ interface ChartDataPoint {
   reference_max?: number;
 }
 
-const AnalyteDetailPage: React.FC = () => {
-  const { analyteId } = useParams<{ analyteId: string }>();
+const SourceLabelDetailPage: React.FC = () => {
+  const { sourceLabel } = useParams<{ sourceLabel: string }>();
   const navigate = useNavigate();
 
-  // Проверяем, что ID является валидным числом
-  const numericAnalyteId = analyteId ? parseInt(analyteId, 10) : null;
-  const isValidId = Boolean(numericAnalyteId && !isNaN(numericAnalyteId));
-
-  const { data: analyte, isLoading: analyteLoading } = useQuery({
-    queryKey: ['analyte', numericAnalyteId],
-    queryFn: () => analytesApi.getById(numericAnalyteId!),
-    enabled: isValidId,
-  });
+  const decodedSourceLabel = sourceLabel ? decodeURIComponent(sourceLabel) : '';
 
   const { data: history = [], isLoading: historyLoading, error } = useQuery({
-    queryKey: ['analyte-history', numericAnalyteId],
+    queryKey: ['source-label-history', decodedSourceLabel],
     queryFn: async () => {
-      console.log('Fetching history for analyte:', numericAnalyteId);
+      console.log('Fetching history for source label:', decodedSourceLabel);
       try {
-        const result = await resultsApi.getAnalyteHistory(numericAnalyteId!);
-        console.log('History API response:', result);
+        const result = await resultsApi.getSourceLabelHistory(decodedSourceLabel);
+        console.log('Source label history API response:', result);
         return result;
       } catch (err) {
-        console.error('Error fetching analyte history:', err);
+        console.error('Error fetching source label history:', err);
         throw err;
       }
     },
-    enabled: isValidId,
+    enabled: !!decodedSourceLabel,
   });
 
   // Подготавливаем данные для графика
@@ -224,25 +228,6 @@ const AnalyteDetailPage: React.FC = () => {
 
   // Есть ли подозрительные значения (>10x отклонение)
   const hasSuspectValues = history.some(result => result.is_suspect);
-
-  // Если ID невалидный, показываем ошибку
-  if (!isValidId) {
-    return (
-      <Container>
-        <Header>
-          <BackButton onClick={() => navigate('/')}>
-            <ArrowLeft size={16} />
-            Назад
-          </BackButton>
-          <Title>Ошибка</Title>
-        </Header>
-        
-        <ErrorMessage 
-          message={`Некорректный ID показателя: ${analyteId}`}
-        />
-      </Container>
-    );
-  }
 
   const getFlagVariant = (result: any) => {
     if (result.is_suspect) return 'anomaly';
@@ -294,7 +279,7 @@ const AnalyteDetailPage: React.FC = () => {
 
   if (error) {
     const errorMessage = error instanceof Error ? error.message : 'Не удалось загрузить историю показателя';
-    console.error('Analyte detail error:', error);
+    console.error('Source label detail error:', error);
     
     return (
       <Container>
@@ -303,7 +288,7 @@ const AnalyteDetailPage: React.FC = () => {
             <ArrowLeft size={16} />
             Назад
           </BackButton>
-          <Title>{analyte?.name || 'Показатель'}</Title>
+          <Title>{decodedSourceLabel || 'Показатель'}</Title>
         </Header>
         
         <ErrorMessage 
@@ -313,7 +298,7 @@ const AnalyteDetailPage: React.FC = () => {
     );
   }
 
-  if (analyteLoading || historyLoading) {
+  if (historyLoading) {
     return (
       <Container>
         <LoadingState>Загрузка данных...</LoadingState>
@@ -328,8 +313,13 @@ const AnalyteDetailPage: React.FC = () => {
           <ArrowLeft size={16} />
           Назад
         </BackButton>
-        <Title>{analyte?.name || 'Показатель'}</Title>
+        <Title>{decodedSourceLabel}</Title>
       </Header>
+
+      <InfoAlert>
+        <Activity size={20} />
+        Это показатель, который еще не привязан к системе аналитов. Данные отображаются как есть из источника.
+      </InfoAlert>
 
       {hasSuspectValues && (
         <WarningAlert>
@@ -467,4 +457,4 @@ const AnalyteDetailPage: React.FC = () => {
   );
 };
 
-export default AnalyteDetailPage;
+export default SourceLabelDetailPage;

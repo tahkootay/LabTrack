@@ -145,6 +145,14 @@ export const resultsApi = {
     return response.data;
   },
 
+  getSourceLabelHistory: async (sourceLabel: string, params?: {
+    skip?: number;
+    limit?: number;
+  }): Promise<Result[]> => {
+    const response = await apiClient.get<Result[]>(`/api/v1/results/source-label/${encodeURIComponent(sourceLabel)}/history`, { params });
+    return response.data;
+  },
+
   getSummary: async (params?: {
     date_from?: string;
     date_to?: string;

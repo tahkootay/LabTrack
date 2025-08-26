@@ -123,8 +123,9 @@ const EmptyState = styled.div`
 `;
 
 export interface ResultSummary {
-  analyte_id: number;
+  analyte_id: number | string;
   analyte_name: string;
+  source_label?: string;
   last_value: string;
   unit: string;
   reference: string;
@@ -137,7 +138,7 @@ export interface ResultSummary {
 
 interface ResultsTableProps {
   results: ResultSummary[];
-  onRowClick: (analyteId: number) => void;
+  onRowClick: (result: ResultSummary) => void;
   loading?: boolean;
 }
 
@@ -201,7 +202,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results, onRowClick, loadin
             const flagIcon = getFlagIcon(result.flag, result.is_out_of_range, result.is_suspect);
 
             return (
-              <Tr key={result.analyte_id} onClick={() => onRowClick(result.analyte_id)}>
+              <Tr key={result.analyte_id} onClick={() => onRowClick(result)}>
                 <Td>
                   <AnalyteName>{result.analyte_name}</AnalyteName>
                 </Td>

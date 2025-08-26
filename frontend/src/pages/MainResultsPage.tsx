@@ -16,7 +16,7 @@ const Container = styled.div`
 
 const Header = styled.div`
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: ${({ theme }) => theme.spacing.lg};
 `;
@@ -131,13 +131,17 @@ const MainResultsPage: React.FC = () => {
     error
   } = useQuery({
     queryKey: ['results-summary', filters],
-    queryFn: () => resultsApi.getSummary({
-      date_from: filters.dateFrom || undefined,
-      date_to: filters.dateTo || undefined,
-      search: filters.search || undefined,
-      lab_name: filters.labName || undefined,
-      out_of_range_only: filters.outOfRangeOnly || undefined,
-    }),
+    queryFn: async () => {
+      const data = await resultsApi.getSummary({
+        date_from: filters.dateFrom || undefined,
+        date_to: filters.dateTo || undefined,
+        search: filters.search || undefined,
+        lab_name: filters.labName || undefined,
+        out_of_range_only: filters.outOfRangeOnly || undefined,
+      });
+      console.log('Results summary API response:', data);
+      return data;
+    },
     refetchInterval: 30000, // Обновляем каждые 30 секунд
   });
 
@@ -165,8 +169,31 @@ const MainResultsPage: React.FC = () => {
     };
   }, [results]);
 
-  const handleRowClick = (analyteId: number) => {
-    navigate(`/analyte/${analyteId}`);
+  const handleRowClick = (result: ResultSummary) => {
+    console.log('Row clicked:', result);
+    
+    // Если есть настоящий analyte_id (число), используем его
+    if (typeof result.analyte_id === 'number') {
+      navigate(`/analyte/${result.analyte_id}`);
+      return;
+    }
+    
+    // Если это строка и корректное число, пытаемся использовать
+    if (typeof result.analyte_id === 'string') {
+      const numericId = parseInt(result.analyte_id, 10);
+      if (!isNaN(numericId)) {
+        navigate(`/analyte/${numericId}`);
+        return;
+      }
+    }
+    
+    // Иначе используем source_label для навигации
+    if (result.source_label) {
+      navigate(`/source-label/${encodeURIComponent(result.source_label)}`);
+    } else {
+      console.error('No valid navigation path for result:', result);
+      alert('Не удается определить путь для навигации');
+    }
   };
 
   const handleUploadClick = () => {

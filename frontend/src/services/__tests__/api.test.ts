@@ -1,3 +1,5 @@
+export {}; // Make this file a module
+
 describe('API Services', () => {
   // Простой тест для проверки того, что API модули загружаются без ошибок
   it('should load API modules without errors', () => {

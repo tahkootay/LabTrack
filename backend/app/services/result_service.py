@@ -88,8 +88,22 @@ class ResultService:
             joinedload(Result.document)
         ).join(Document).filter(
             Result.analyte_id == analyte_id,
-            Document.user_id == user_id,
-            Result.normalized == True
+            Document.user_id == user_id
+        ).order_by(desc(Result.created_at)).offset(skip).limit(limit).all()
+    
+    def get_source_label_history(
+        self,
+        source_label: str,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 50
+    ) -> List[Result]:
+        return self.db.query(Result).options(
+            joinedload(Result.analyte),
+            joinedload(Result.document)
+        ).join(Document).filter(
+            Result.source_label == source_label,
+            Document.user_id == user_id
         ).order_by(desc(Result.created_at)).offset(skip).limit(limit).all()
     
     def get_trends_summary(
@@ -221,6 +235,7 @@ class ResultService:
             summary.append({
                 "analyte_id": result.analyte_id or f"source_{hash(result.source_label)}",  # Используем хеш как ID для группировки
                 "analyte_name": result.analyte.name if result.analyte else result.source_label,
+                "source_label": result.source_label,  # Добавляем source_label для навигации
                 "last_value": str(result.numeric_value) if result.numeric_value else result.raw_value,
                 "unit": result.normalized_unit or result.raw_unit or "",
                 "reference": reference,

@@ -11,6 +11,7 @@ import ResultsPage from './pages/ResultsPage';
 import AnalytesPage from './pages/AnalytesPage';
 import DocumentDetailPage from './pages/DocumentDetailPage';
 import AnalyteDetailPage from './pages/AnalyteDetailPage';
+import SourceLabelDetailPage from './pages/SourceLabelDetailPage';
 import UploadsPage from './pages/UploadsPage';
 import { theme } from './styles/theme';
 import GlobalStyles from './styles/GlobalStyles';
@@ -57,6 +58,7 @@ function App() {
                 <Route path="/results" element={<ResultsPage />} />
                 <Route path="/analytes" element={<AnalytesPage />} />
                 <Route path="/analyte/:analyteId" element={<AnalyteDetailPage />} />
+                <Route path="/source-label/:sourceLabel" element={<SourceLabelDetailPage />} />
                 <Route path="/uploads" element={<UploadsPage />} />
               </Routes>
             </ErrorBoundary>

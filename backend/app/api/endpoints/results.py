@@ -79,6 +79,24 @@ def get_analyte_history(
     return results
 
 
+@router.get("/source-label/{source_label}/history", response_model=List[ResultWithAnalyte])
+def get_source_label_history(
+    source_label: str,
+    skip: int = 0,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
+    result_service = ResultService(db)
+    results = result_service.get_source_label_history(
+        source_label=source_label,
+        user_id=current_user_id,
+        skip=skip,
+        limit=limit
+    )
+    return results
+
+
 @router.get("/{result_id}", response_model=ResultWithAnalyte)
 def get_result(
     result_id: int,
